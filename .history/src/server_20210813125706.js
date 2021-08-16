@@ -3,7 +3,8 @@ import Queue from 'bull'
 import Redis from 'ioredis'
 import bodyParser from 'body-parser'
 
-const REDIS_URL = 'redis://:5edce20ee1674f20ab5a6637e3e32008@usw1-sought-jennet-31323.upstash.io:31323';
+// const API_ENDPOINT = 'https://analyticly.hashably.workers.dev/api/sanshit.sagar@gmail.com'
+const REDIS_URL = 'redis://:615f5e1534ba4882a798a270e112bd14@usw1-polite-lark-31298.upstash.io:31298';
 const redis = new Redis(REDIS_URL); 
 
 export const testApiQueue = new Queue("test_queue", REDIS_URL)
@@ -32,7 +33,7 @@ function generateExitMessage(timestamp) {
 }
 
 function generateUnknownError(error) {
-    return `1. Recieved an error: ${error.message}`;
+    return `Recieved an error: ${error.message}`;
 }
 
 testApiQueue.process(async (job) => {
@@ -53,7 +54,7 @@ testApiQueue.process(async (job) => {
             .zadd('clickstream.chronological.by.user', 0, userLexKey)
             .zadd('clickstream.chronological.by.slug', 0, slugLexKey)
             .sadd(`unique.visitors.for.slug.${slug}`, ip)
-            .sadd(`unique.visitors.for.user.${owner}`, ip)
+            .sadd(`unique.visitors.for.user.${user}`, ip)
             .zincrby(`user.${owner}.clickcount`, 1, `${slug}`) 
             .zincrby(`slug.${slug}.clickcount`, 1, `${ip}`)
             .exec((err, result) => { 
@@ -115,8 +116,8 @@ app.post('/clicks', async (req, res) => {
         console.log(result); 
         res.status(200).end(result); 
     } catch(error) {
-        console.log(`2. Recieved an error: ${error.message}`); 
-        res.status(500).end(`2. Recieved an error: ${error.message}`); 
+        console.log(`Recieved an error: ${error.message}`); 
+        res.status(500).end(`Recieved an error: ${error.message}`); 
     }    
 });
 

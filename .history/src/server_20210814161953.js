@@ -47,7 +47,7 @@ testApiQueue.process(async (job) => {
             .lpush('eventlog', logEntry)
             .lpush('clickstream', clickstreamPayload)
             .lpush(`clickstream.user.${owner}`, clickstreamPayload)
-            .lpush(`clickstream.slug.${slug}`, clickstreamPayload)
+            // .lpush(`clickstream.slug.${slug}`, clickstreamPayload)
             .hset(`cfray.to.click`, cfRay, clickstreamPayload)
             .zadd('clickstream.chronological', 0, lexKey)
             .zadd('clickstream.chronological.by.user', 0, userLexKey)

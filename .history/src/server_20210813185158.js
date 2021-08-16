@@ -3,7 +3,7 @@ import Queue from 'bull'
 import Redis from 'ioredis'
 import bodyParser from 'body-parser'
 
-const REDIS_URL = 'redis://:5edce20ee1674f20ab5a6637e3e32008@usw1-sought-jennet-31323.upstash.io:31323';
+const REDIS_URL = 'redis://:615f5e1534ba4882a798a270e112bd14@usw1-polite-lark-31298.upstash.io:31298';
 const redis = new Redis(REDIS_URL); 
 
 export const testApiQueue = new Queue("test_queue", REDIS_URL)

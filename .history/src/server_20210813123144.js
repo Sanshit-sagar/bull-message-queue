@@ -3,28 +3,31 @@ import Queue from 'bull'
 import Redis from 'ioredis'
 import bodyParser from 'body-parser'
 
-const REDIS_URL = 'redis://:5edce20ee1674f20ab5a6637e3e32008@usw1-sought-jennet-31323.upstash.io:31323';
+// const API_ENDPOINT = 'https://analyticly.hashably.workers.dev/api/sanshit.sagar@gmail.com'
+const REDIS_URL = 'redis://:615f5e1534ba4882a798a270e112bd14@usw1-polite-lark-31298.upstash.io:31298';
 const redis = new Redis(REDIS_URL); 
 
 export const testApiQueue = new Queue("test_queue", REDIS_URL)
 
 function serializeParams(jobData) {
-    return JSON.stringify({ ...jobData })
+    return JSON.stringify({ ...jobData });
 }
 
-function createLexKey(timestamp, hashFragments) {
-    return `${timestamp}:${hashFragments.join(':')}`
+function createLexicographicalKey(timestamp, hashFragments) {
+    return `${timestamp}:${hashFragments.join(':')}`;
 }
 
 function createLexKeySet(owner, slug, cfRay, timestamp) {
     const fragments = [`${cfRay}`, `${slug.substring(1)}`];
-    const lexKey = createLexKey(timestamp, fragments);
-    const userFragments = [...fragments, `${owner}`];
-    const userLexKey = createLexKey(timestamp, userFragments);
-    const slugFragments = [...fragments, `${slug}`, `${owner}`]; 
-    const slugLexKey = createLexKey(timestamp, slugFragments); 
+    const lexKey = createLexicographicalKey(timestamp, fragments);
+    const userFragments = [...fragmentsArr, `${owner}`];
+    const userLexKey = createLexicographicalKey(timestamp, userFragments);
+    const slugFragments = [...fragmentsArr, `${slug}`, `${owner}`]; 
+    const slugLexKey = createLexicographicalKey(timestamp, slugFragments); 
 
-    return {lexKey, userLexKey, slugLexKey }
+    console.log(`${lexKey}`);
+    console.log(`${userLexKey}`);
+    console.log(`${slugLexKey}`);
 }
 
 function generateExitMessage(timestamp) {
@@ -32,15 +35,13 @@ function generateExitMessage(timestamp) {
 }
 
 function generateUnknownError(error) {
-    return `1. Recieved an error: ${error.message}`;
+    return `Recieved an error: ${error.message}`;
 }
 
 testApiQueue.process(async (job) => {
-    const { slug, cfRay, owner, logEntry, ip, timestamp } = job.data;
-    const { lexKey, userLexKey, slugLexKey } = createLexKeySet(owner, slug, cfRay, timestamp); 
+    const { slug, cfRay, owner, logEntry, timestamp } = job.data;
     const clickstreamPayload = serializeParams(job.data);
-
-    console.log(`IP ADDRESS: ${ip}`);
+    const { lexKey, userLexKey, slugLexKey } = createLexKeySet(owner, slug, cfRay, timestamp); 
 
     try {
         const multiPromise = await redis.multi()
@@ -52,19 +53,13 @@ testApiQueue.process(async (job) => {
             .zadd('clickstream.chronological', 0, lexKey)
             .zadd('clickstream.chronological.by.user', 0, userLexKey)
             .zadd('clickstream.chronological.by.slug', 0, slugLexKey)
-            .sadd(`unique.visitors.for.slug.${slug}`, ip)
-            .sadd(`unique.visitors.for.user.${owner}`, ip)
-            .zincrby(`user.${owner}.clickcount`, 1, `${slug}`) 
-            .zincrby(`slug.${slug}.clickcount`, 1, `${ip}`)
+            .zincrby(`user.${owner}.clickcount`, 1, `${slug}`)
+            .zincrby(`slug.${slug}.clickcount`, 1, `${slug}`)
             .exec((err, result) => { 
-                if(err) {
-                    console.log(err);
-                }
                 console.log(JSON.stringify(result)); 
             });
         return Promise.resolve(generateExitMessage(timestamp));
     } catch (error) {
-        console.log(`${error.message}`);
         return Promise.reject(generateUnknownError(error));
     }
 });
@@ -87,7 +82,7 @@ const app = express();
 app.use(bodyParser.json({ type: 'application/json' }))
 
 app.get('/', (req, res) => {
-    res.status(200).send('Hi Planet!'); 
+    res.status(200).send('Hello World!'); 
 });
 
 app.post('/clicks', async (req, res) => {
@@ -100,7 +95,6 @@ app.post('/clicks', async (req, res) => {
             logEntry: req.body.logEntry,
             requestHeaders: req.body.requestHeaders,
             responseHeaders: req.body.responseHeaders,
-            ip: req.body.requestHeaders.ip,
             cfRay: req.body.cfRay,
             workerId: req.body.workerId,
             slug: req.body.slug,
@@ -115,8 +109,8 @@ app.post('/clicks', async (req, res) => {
         console.log(result); 
         res.status(200).end(result); 
     } catch(error) {
-        console.log(`2. Recieved an error: ${error.message}`); 
-        res.status(500).end(`2. Recieved an error: ${error.message}`); 
+        console.log(`Recieved an error: ${error.message}`); 
+        res.status(500).end(`Recieved an error: ${error.message}`); 
     }    
 });
 
